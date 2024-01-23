@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <title>Tool | SMS Bridge Link</title>
+
+    <link rel="canonical" href="https://codepen.io/jproffitt71/pen/rNReZBd">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+
+  
+  
+<style>
+div {
+  text-align: center;
+}
+
+a {
+  margin: 12px auto;
+  padding: 48px;
+  background: #09F;
+  color: #fff;
+  font-size: 24px;
+  border-radius: 3px;
+  display: inline-block;
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+  
+  
+</head>
+
+<body translate="no">
+  <div>
+  <a id="sms-link" target="_blank" href="sms:///&amp;body=">Open Text App</a>
+  <p>Click the link above to open a prepared text message</p>
+</div>
+  
+      <script id="rendered-js">
+// Get the URL & Params, Break them Down
+function getUrlParams() {
+  var vars = {};
+  var parts = window.location.href.replace(
+  /[?&]+([^=&]+)=([^&]*)/gi,
+  function (m, key, value) {
+    vars[key] = decodeURIComponent(value.replace(/[+]/g, " "));
+  });
+  return vars;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  var smsLinkEl = document.querySelector('#sms-link');
+  var params = getUrlParams();
+  var phoneNumber = params.phone || "";
+  var message = params.message || "";
+
+  smsLinkEl.href = `sms://${encodeURIComponent(phoneNumber)}/&body=${encodeURIComponent(message)}`;
+
+  if (phoneNumber) {
+    smsLinkEl.innerText = `Open Text to ${phoneNumber}`;
+  } else {
+    smsLinkEl.innerText = `Open Text App`;
+  }
+
+  smsLinkEl.addEventListener('click', function (e) {
+    setTimeout(function () {
+      window.top.close();
+    }, 5000);
+  });
+});
+//# sourceURL=pen.js
+    </script>
+
+  
+
+
+
+</body></html>

@@ -59,14 +59,16 @@ document.addEventListener('DOMContentLoaded', function () {
   var message = params.message || "";
 
   var messageUrl = '';
+
+  var cleanPhoneNumber = phoneNumber.replace(/[ .-]/g, '').replace(/^(\d)/, '+1$1')
   
   switch (protocol.toLowerCase()) {
     case 'signal':
-        messageUrl = `https://signal.me/#p/${encodeURIComponent(phoneNumber)}`
+        messageUrl = `https://signal.me/#p/${encodeURIComponent(cleanPhoneNumber)}`
         break;
     case 'sms':
     default:
-        messageUrl = `sms://${encodeURIComponent(phoneNumber)}/&body=${encodeURIComponent(message)}`;
+        messageUrl = `sms://${encodeURIComponent(cleanPhoneNumber)}/&body=${encodeURIComponent(message)}`;
   }
 
   messengerLinkEl.href = messageUrl

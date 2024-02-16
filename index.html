@@ -69,15 +69,15 @@ document.addEventListener('DOMContentLoaded', function () {
         messageUrl = `sms://${encodeURIComponent(phoneNumber)}/&body=${encodeURIComponent(message)}`;
   }
 
-  messageLinkEl.href = messageUrl
+  messengerLinkEl.href = messageUrl
 
   if (phoneNumber) {
-    messageLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text to ${phoneNumber}`;
+    messengerLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text to ${phoneNumber}`;
   } else {
-    messageLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text App`;
+    messengerLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text App`;
   }
 
-  messageLinkEl.addEventListener('click', function (e) {
+  messengerLinkEl.addEventListener('click', function (e) {
     setTimeout(function () {
       window.top.close();
     }, 5000);

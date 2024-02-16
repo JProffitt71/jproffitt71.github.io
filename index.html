@@ -35,7 +35,7 @@ a {
 
 <body translate="no">
   <div>
-  <a id="sms-link" target="_blank" href="sms:///&amp;body=">Open Text App</a>
+  <a id="messenger-link" target="_blank" href="sms:///&amp;body=">Open Text App</a>
   <p>Click the link above to open a prepared text message</p>
 </div>
   
@@ -52,20 +52,32 @@ function getUrlParams() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  var smsLinkEl = document.querySelector('#sms-link');
+  var messengerLinkEl = document.querySelector('#messenger-link');
   var params = getUrlParams();
+  var protocol = params.protocol || "sms";
   var phoneNumber = params.phone || "";
   var message = params.message || "";
 
-  smsLinkEl.href = `sms://${encodeURIComponent(phoneNumber)}/&body=${encodeURIComponent(message)}`;
-
-  if (phoneNumber) {
-    smsLinkEl.innerText = `Open Text to ${phoneNumber}`;
-  } else {
-    smsLinkEl.innerText = `Open Text App`;
+  var messageUrl = '';
+  
+  switch (protocol.toLowerCase()) {
+    case 'signal':
+        messageUrl = `https://signal.me/#p/${encodeURIComponent(phoneNumber)}`
+        break;
+    case 'sms':
+    default:
+        messageUrl = `sms://${encodeURIComponent(phoneNumber)}/&body=${encodeURIComponent(message)}`;
   }
 
-  smsLinkEl.addEventListener('click', function (e) {
+  messageLinkEl.href = messageUrl
+
+  if (phoneNumber) {
+    messageLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text to ${phoneNumber}`;
+  } else {
+    messageLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text App`;
+  }
+
+  messageLinkEl.addEventListener('click', function (e) {
     setTimeout(function () {
       window.top.close();
     }, 5000);

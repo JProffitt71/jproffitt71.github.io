@@ -3,7 +3,7 @@
   <meta charset="UTF-8">
   <title>Tool | SMS Bridge Link</title>
 
-    <link rel="canonical" href="https://codepen.io/jproffitt71/pen/rNReZBd">
+  <link rel="canonical" href="https://codepen.io/jproffitt71/pen/rNReZBd">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 
@@ -59,14 +59,23 @@ function getUrlParams() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  // Get references to dom elements
+  
   var messengerLinkEl = document.querySelector('#messenger-link');
   var messengerNoteEl = document.querySelector('#messenger-note');
+
+  // Parse parameters passed to page
+  
   var params = getUrlParams();
   var protocol = params.protocol || "sms";
   var phoneNumber = params.phone || "";
   var message = params.message || "";
 
+  // Clean up phone number removing any non-number characters
+
   var cleanPhoneNumber = phoneNumber.replace(/[ .-]/g, '').replace(/^(\d)/, '+1$1')
+
+  // Craft the protocol-specific url for the messenger link element
 
   var dmUrl = '';
   var dmCopy = false;
@@ -84,6 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
         dmUrl = `sms://${encodeURIComponent(cleanPhoneNumber)}/&body=${encodeURIComponent(message)}`;
   }
 
+  // Configure messenger link element / help text
+
   messengerLinkEl.href = dmUrl
 
   if (phoneNumber) {
@@ -97,21 +108,28 @@ document.addEventListener('DOMContentLoaded', function () {
     messengerNoteEl.innerText = 'Note: You will need to paste the message in the app, it will be copied to your clipboard when you click this button';
   }
 
+  // Override messenger link element click action
+
   messengerLinkEl.addEventListener('click', function (e) {
     e.preventDefault();
+
+    // If provided, copy value to clipboard
     
     if (messengerLinkEl.dataset.copy) {
       navigator.clipboard.writeText(messengerLinkEl.dataset.copy);
     }
 
+    // Open link like normal
+
     window.open(messengerLinkEl.href)
+
+    // Automatically close this page 5 seconds later
     
     setTimeout(function () {
       window.top.close();
     }, 5000);
   });
 });
-//# sourceURL=pen.js
     </script>
 
   

@@ -43,6 +43,7 @@ a[data-copy] {
   <div>
   <a id="messenger-link" target="_blank" href="sms:///&amp;body=">Open Text App</a>
   <p>Click the link above to open a prepared text message</p>
+  <p id="messenger-note"></p>
 </div>
   
       <script id="rendered-js">
@@ -59,6 +60,7 @@ function getUrlParams() {
 
 document.addEventListener('DOMContentLoaded', function () {
   var messengerLinkEl = document.querySelector('#messenger-link');
+  var messengerNoteEl = document.querySelector('#messenger-note');
   var params = getUrlParams();
   var protocol = params.protocol || "sms";
   var phoneNumber = params.phone || "";
@@ -92,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (dmCopy) {
     messengerLinkEl.setAttribute('data-copy', dmCopy);
+    messengerNoteEl.innerText = 'Note: You will need to paste the message in the app, it will be copied to your clipboard when you click this button';
   }
 
   messengerLinkEl.addEventListener('click', function (e) {

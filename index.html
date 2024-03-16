@@ -31,7 +31,7 @@
   </head>
   <body translate="no">
     <div>
-    <a id="messenger-link" target="_blank" href="sms:///&amp;body=">Open Text App</a>
+    <a id="messenger-link" target="_blank" href="sms:///&amp;body=">Open SMS Text</a>
     <p>Click the link above to open a prepared text message</p>
     <p id="messenger-note"></p>
   </div>
@@ -86,7 +86,12 @@
         // Configure messenger link element / help text
       
         messengerLinkEl.href = dmUrl
-        messengerLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text to ${phoneNumber}`;
+
+        if (phoneNumber) {
+          messengerLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text to ${phoneNumber}`;
+        } else {
+          messengerLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text`;
+        }
       
         if (dmCopy) {
           messengerLinkEl.setAttribute('data-copy', dmCopy);

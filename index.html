@@ -23,6 +23,12 @@ a {
   border-radius: 3px;
   display: inline-block;
 }
+
+a[data-copy] {
+  background: #FC0;
+  color: #111;
+}
+  
 </style>
 
   <script>
@@ -58,20 +64,25 @@ document.addEventListener('DOMContentLoaded', function () {
   var phoneNumber = params.phone || "";
   var message = params.message || "";
 
-  var messageUrl = '';
-
   var cleanPhoneNumber = phoneNumber.replace(/[ .-]/g, '').replace(/^(\d)/, '+1$1')
+
+  var dmUrl = '';
+  var dmCopy = false;
   
   switch (protocol.toLowerCase()) {
     case 'signal':
-        messageUrl = `https://signal.me/#p/${cleanPhoneNumber}`
+        dmUrl = `https://signal.me/#p/${cleanPhoneNumber}`
+        dmCopy = message
+        break;
+    case 'whatsapp':
+        dmurl = `https://https://wa.me/${cleanPhoneNumber.replace('+', '')}?text=${encodeURIComponent(message)}`
         break;
     case 'sms':
     default:
-        messageUrl = `sms://${encodeURIComponent(cleanPhoneNumber)}/&body=${encodeURIComponent(message)}`;
+        dmUrl = `sms://${encodeURIComponent(cleanPhoneNumber)}/&body=${encodeURIComponent(message)}`;
   }
 
-  messengerLinkEl.href = messageUrl
+  messengerLinkEl.href = dmUrl
 
   if (phoneNumber) {
     messengerLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text to ${phoneNumber}`;
@@ -79,7 +90,19 @@ document.addEventListener('DOMContentLoaded', function () {
     messengerLinkEl.innerText = `Open ${protocol.charAt(0).toUpperCase() + protocol.slice(1).toLowerCase()} Text App`;
   }
 
+  if (dmCopy) {
+    messengerLinkEl.setAttribute('data-copy', dmCopy);
+  }
+
   messengerLinkEl.addEventListener('click', function (e) {
+    e.preventDefault();
+    
+    if (messengerLinkEl.dataset.copy) {
+      navigator.clipboard.writeText(messengerLinkEl.dataset.copy);
+    }
+
+    window.open(messengerLinkEl.href)
+    
     setTimeout(function () {
       window.top.close();
     }, 5000);

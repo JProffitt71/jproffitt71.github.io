@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dmCopy = message
         break;
     case 'whatsapp':
-        dmurl = `https://https://wa.me/${cleanPhoneNumber.replace('+', '')}?text=${encodeURIComponent(message)}`
+        dmUrl = `https://wa.me/${cleanPhoneNumber.replace('+', '')}?text=${encodeURIComponent(message)}`
         break;
     case 'sms':
     default:

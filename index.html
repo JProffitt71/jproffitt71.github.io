@@ -102,17 +102,7 @@
         // Override messenger link element click action
       
         messengerLinkEl.addEventListener('click', function (e) {
-          e.preventDefault();
-      
-          // If provided, copy value to clipboard
-          
-          if (messengerLinkEl.dataset.copy) {
-            navigator.clipboard.writeText(messengerLinkEl.dataset.copy);
-          }
-      
-          // Open link like normal
-      
-          window.open(messengerLinkEl.href)
+          navigator.clipboard.writeText(messengerLinkEl.dataset.copy);
       
           // Automatically close this page 5 seconds later
           

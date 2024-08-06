@@ -80,7 +80,7 @@
               break;
           case 'sms':
           default:
-              dmUrl = `sms://${encodeURIComponent(cleanPhoneNumber)}/&body=${encodeURIComponent(message)}`;
+              dmUrl = `sms://${encodeURIComponent(cleanPhoneNumber)}/?&body=${encodeURIComponent(message)}`;
         }
       
         // Configure messenger link element / help text

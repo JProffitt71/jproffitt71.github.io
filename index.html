@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Tool | SMS Bridge Link</title>
+    <title>Tool | SMS/Email Bridge Link</title>
     
     <link rel="canonical" href="https://codepen.io/jproffitt71/pen/rNReZBd">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,17 +47,8 @@
         });
         return vars;
       }
-      
-      document.addEventListener('DOMContentLoaded', function () {
-        // Get references to dom elements
-        
-        var messengerLinkEl = document.querySelector('#messenger-link');
-        var messengerNoteEl = document.querySelector('#messenger-note');
-      
-        // Parse parameters passed to page
-        
-        var params = getUrlParams();
-        var protocol = params.protocol || "sms";
+
+      function setupDMLink(messengerLinkEl, messengerNoteEl, protocol, params) {
         var phoneNumber = params.phone || "";
         var message = params.message || "";
       
@@ -98,10 +89,51 @@
           
           messengerNoteEl.innerText = 'Note: You will need to paste the message in the app, it will be copied to your clipboard when you click the link above';
         }
+      }
+
+      function setupMailtoLink(messengerLinkEl, messengerNoteEl, params) {
+        var email = params.email || "";
+        var subject = params.subject || "";
+        var message = params.message || "";
+      
+        // Craft the protocol-specific url for the messenger link element
+      
+        var dmUrl = `mailto:${email}?subject=${subject}&body=${message}`;
+      
+        // Configure messenger link element / help text
+      
+        messengerLinkEl.href = `mailto:${email}?subject=${subject}&body=${message}`;
+        messengerLinkEl.innerText = `Open email to ${email}`;
+      }
+      
+      document.addEventListener('DOMContentLoaded', function () {
+        // Get references to dom elements
+        
+        var messengerLinkEl = document.querySelector('#messenger-link');
+        var messengerNoteEl = document.querySelector('#messenger-note');
+      
+        // Parse parameters passed to page
+        
+        var params = getUrlParams();
+        var protocol = params.protocol || "sms";
+
+        switch (protocol.toLowerCase()) {
+          case 'mailto':
+            setupMailtoLink(messengerLinkEl, messengerNoteEl, params);
+            break;
+          case 'sms':
+          case 'signal':
+          case 'whatsapp':
+          default:
+            setupDMLink(messengerLinkEl, messengerNoteEl, protocol, params);
+            break;
+        }
       
         // Override messenger link element click action
       
         messengerLinkEl.addEventListener('click', function (e) {
+          // Copy necessary message to clipboard (e.g. Signal message)
+          
           navigator.clipboard.writeText(messengerLinkEl.dataset.copy);
       
           // Automatically close this page 5 seconds later

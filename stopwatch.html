@@ -1,0 +1,678 @@
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  
+
+    <link rel="apple-touch-icon" type="image/png" href="https://cpwebassets.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png">
+
+    <meta name="apple-mobile-web-app-title" content="CodePen">
+
+    <link rel="icon" type="image/x-icon" href="https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico">
+
+    <link rel="mask-icon" type="image/x-icon" href="https://cpwebassets.codepen.io/assets/favicon/logo-pin-b4b4269c16397ad2f0f7a01bcdf513a1994f4c94b8af2f191c09eb0d601762b1.svg" color="#111">
+
+
+
+  
+    <script src="https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-2c7831bb44f98c1391d6a4ffda0e1fd302503391ca806e7fcc7b9b87197aec26.js"></script>
+
+
+  <title>Tool | Split Stopwatch</title>
+
+    <link rel="canonical" href="https://codepen.io/jproffitt71/pen/pvzQzZG">
+  
+  <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/balloon-css/1.0.4/balloon.min.css">
+  
+<style>
+#app {
+  overflow-x: hidden;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+.split-timers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.split-timers__add {
+  opacity: 0.5;
+}
+
+.split-timer {
+  position: relative;
+}
+
+.split-timer__card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px;
+  background: #eee;
+  border-bottom: 1px solid #ccc;
+  z-index: 1;
+  transition: all 0.2s;
+}
+
+.split-timer__label {
+  background: none;
+  border: none;
+  width: auto;
+  min-width: 0;
+  flex-basis: 0;
+  flex-grow: 1;
+  pointer-events: none;
+}
+
+.split-timer__stats {
+  font-family: monospace;
+  line-height: 1;
+  text-align: right;
+}
+
+.split-timer__stats-row {
+  display: block;
+}
+
+.split-timer__stats-row:nth-child(n + 2) {
+  font-size: 0.5em;
+  color: rgba(0,0,0,0.5);
+}
+
+.split-timer__plays,
+.split-timer__time {
+font-family: monospace;
+
+}
+
+.split-timer__actions {
+  display: flex;
+  margin-top: -12px;
+  margin-bottom: -12px;
+  margin-right: -12px;
+  align-self: stretch;
+  
+  > * {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 100%;
+    padding: 12px;
+  }
+  
+  @media (max-width: 500px) {
+    display: none;
+  }
+}
+
+.split-timer__drag-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 0px);
+  display: flex;
+  z-index: -2;
+  
+  > * {
+    display: inline-flex;
+    align-items: center;
+    width: 50%;
+    padding: 12px;
+    
+    &:last-child {
+      justify-content: flex-end;
+    }
+  }
+}
+
+.split-timer__edit,
+.split-timer__remove {
+  transition: all 0.2s;
+  &.focus {
+    text-shadow: 2px 2px black;
+  }
+}
+
+.split-timer__edit {
+  background: #0984e3;
+  color: white;
+}
+
+.split-timer__remove {
+  background: #d63031;
+  color: white;
+}
+
+.split-timer--dragging {
+  .split-timer__card {
+    transform: translate(calc(var(--drag-offset) * 1px), 0);
+    transition: none;
+  }
+}
+
+.split-timer--playing {
+  .split-timer__card {
+    background: #008000;
+    color: #fff;
+  
+    * {
+      color: inherit;
+    }
+  }
+}
+
+.split-timer--total {
+  font-weight: bold;
+}
+
+.split-timer--add {
+  opacity: 0.5;
+  
+  .split-timer__label {
+    pointer-events: initial;
+  }
+}
+
+.mobile-instructions {
+  @media (min-width: 501px) {
+    display: none;
+  }
+}
+
+.time-distribution-table {
+  font-size: 10px;
+  
+  tr:first-child > th {
+    padding: 12px 3px;
+    
+    &:nth-child(n + 2) {
+      transform: translate(0%, 10%) rotate(-45deg) translate(0%, 30%);
+      transform-origin: 0% 50%;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+  
+  th,
+  td {
+    padding: 6px;
+  }
+  
+  .no-points {
+    color: #AAA;
+  }
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+  
+  
+</head>
+
+<body translate="no">
+  <div id="app" class="container-fluid" data-v-app=""><h1>Split Stopwatch</h1><ul class="split-timers" style="--drag-offset: 0;"><li class="split-timer split-timer--total"><div class="split-timer__card">Total <span class="split-timer__time">00:14:64</span></div></li><li class="split-timer"><div class="split-timer__card"><input type="text" class="split-timer__label"><span class="split-timer__stats"><span class="split-timer__stats-row"><span class="split-timer__plays">6</span> / <span class="split-timer__time">00:08:02</span></span><span class="split-timer__stats-row"><span class="split-timer__avg">Avg: 00:01:33</span> / <span class="split-timer__max">Max: 00:02:90</span></span></span><div class="split-timer__actions"><i class="fas split-timer__play fa-play"></i><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></div><div class="split-timer__drag-actions"><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></li><li class="split-timer"><div class="split-timer__card"><input type="text" class="split-timer__label"><span class="split-timer__stats"><span class="split-timer__stats-row"><span class="split-timer__plays">1</span> / <span class="split-timer__time">00:06:62</span></span><span class="split-timer__stats-row"><span class="split-timer__avg">Avg: 00:06:62</span> / <span class="split-timer__max">Max: 00:06:62</span></span></span><div class="split-timer__actions"><i class="fas split-timer__play fa-play"></i><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></div><div class="split-timer__drag-actions"><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></li><li class="split-timer split-timer--add"><div class="split-timer__card"><input type="text" class="split-timer__label" placeholder="New Split"></div></li></ul><p class="small text-muted mobile-instructions">Tap to play/stop, swipe right/left to edit/delete</p><button class="btn btn-danger w-100">Reset</button><!-- ANALYTICS --><details open="" class="mt-3"><summary>Breakdown</summary><div class="table-responsive"><table class="table time-distribution-table mt-2 mx-auto"><tbody><tr><th>Timer</th><th>00:15</th><th>00:30</th><th>00:45</th><th>01:00</th></tr><tr><th>test2</th><td class="">6</td><td class="no-points">0</td><td class="no-points">0</td><td class="no-points">0</td></tr><tr><th>test</th><td class="">1</td><td class="no-points">0</td><td class="no-points">0</td><td class="no-points">0</td></tr></tbody></table></div></details><!-- DEBUG --><details class="mt-3 text-muted"><summary>Debug</summary><pre class="mt-2 d-noe">{
+  "state": "init",
+  "stateStartTime": 1768344301825,
+  "currentTime": 1768344310760,
+  "timers": [
+    {
+      "id": 1766268758822,
+      "label": "test2",
+      "labelRef": null,
+      "times": [
+        1304,
+        802,
+        2909,
+        492,
+        372,
+        2146
+      ],
+      "totalTime": 8025,
+      "totalPlays": 6,
+      "averageTime": 1337.5,
+      "maxTime": 2909
+    },
+    {
+      "id": 1768344192549,
+      "label": "test",
+      "labelRef": null,
+      "times": [
+        6620
+      ],
+      "totalTime": 6620,
+      "totalPlays": 1,
+      "averageTime": 6620,
+      "maxTime": 6620
+    }
+  ],
+  "newTimerLabel": "",
+  "playingTimerIndex": null,
+  "draggingTimerIndex": null,
+  "dragOrigin": null,
+  "dragDelta": null,
+  "autosaveTimer": 4,
+  "tickTimer": 3,
+  "numTicks": 144
+}</pre></details></div>
+  
+    <script id="rendered-js" type="module">
+import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+
+const canWakeLock = () => 'wakeLock' in navigator;
+let wakelock;
+async function lockWakeState() {
+  if (!canWakeLock()) return;
+  try {
+    wakelock = await navigator.wakeLock.request();
+    wakelock.addEventListener('release', () => {
+      console.log('Screen Wake State Locked:', !wakelock.released);
+    });
+    console.log('Screen Wake State Locked:', !wakelock.released);
+  } catch (e) {
+    console.error('Failed to lock wake state with reason:', e.message);
+  }
+}
+function releaseWakeState() {
+  if (wakelock) wakelock.release();
+  wakelock = null;
+}
+
+function createTimer(id, label, times = []) {
+  return {
+    id,
+    label,
+    labelRef: null,
+    times,
+    clear() {
+      this.times = [];
+    },
+    get totalTime() {
+      return this.times.reduce((sum, time) => sum + time, 0);
+    },
+    set TotalTime(val) {
+      return;
+    },
+    get totalPlays() {
+      return this.times.length;
+    },
+    set totalPlays(val) {
+      return;
+    },
+    get averageTime() {
+      return this.totalPlays > 0 ? this.totalTime / this.totalPlays : 0;
+    },
+    set averageTime(val) {
+      return;
+    },
+    get maxTime() {
+      return this.times.reduce((max, time) => Math.max(max, time), 0);
+    },
+    set maxTime(val) {
+      return;
+    } };
+
+}
+
+var config = {
+  dragActionMinThreshold: 5,
+  dragMaxOffset: 40,
+  dragClickMaxThreshold: 10,
+  chartStep: 15000,
+  chartMinSteps: 4 };
+
+
+const app = createApp({
+  data: function () {
+    return {
+      state: 'init',
+      stateStartTime: Date.now(),
+      currentTime: Date.now(),
+      timers: [],
+      newTimerLabel: '',
+      playingTimerIndex: null,
+      draggingTimerIndex: null,
+      dragOrigin: null,
+      dragDelta: null,
+      autosaveTimer: null,
+      tickTimer: null,
+      numTicks: 0 };
+
+  },
+  computed: {
+    paused: function () {
+      return 'pause' === this.state;
+    },
+    playing: function () {
+      return 'play' === this.state;
+    },
+    totalTime: function () {
+      return this.timers.reduce((time, timer) => time + timer.totalTime, 0);
+    },
+    elapsedStateTime: function () {
+      return this.currentTime - this.stateStartTime;
+    },
+    timeDistroChart: function () {
+      const self = this;
+      const maxTime = this.timers.reduce((max, timer) => Math.max(max, timer.maxTime), 0);
+      const chartStep = config.chartStep;
+      const chartMinSteps = config.chartMinSteps;
+      const chartSteps = Math.max(chartMinSteps, Math.ceil(maxTime / chartStep));
+      const chartLabels = Array(chartSteps).keys().toArray().map(i => {
+        return self.renderTime((i + 1) * chartStep, false);
+      });
+
+      return {
+        labels: chartLabels,
+        series: [].concat(this.timers).sort((a, b) => b.totalTime - a.totalTime).map(timer => {
+          var timeCounts = Array.from(Array(chartSteps)).fill(0);
+
+          return {
+            label: timer.label,
+            data: timer.times.reduce((counts, time) => {
+              counts[Math.floor(time / chartStep)]++;
+              return counts;
+            }, timeCounts) };
+
+        }) };
+
+    },
+    playingTimer: function () {
+      if (null == this.playingTimerIndex) {
+        return null;
+      }
+
+      return this.timers[this.playingTimerIndex];
+    },
+    draggingTimer: function () {
+      if (null == this.draggingTimerIndex) {
+        return null;
+      }
+
+      return this.timers[this.draggingTimerIndex];
+    },
+    dragOffset: function () {
+      if (null == this.dragDelta) {
+        return null;
+      }
+
+      return Math.abs(this.dragDelta.x) > config.dragActionMinThreshold ? Math.sign(this.dragDelta.x) * Math.min((Math.abs(this.dragDelta.x) - config.dragActionMinThreshold) ** 0.75, config.dragMaxOffset) : 0;
+    },
+    dragFocusLeftAction: function () {
+      return null !== this.dragOffset && this.dragOffset >= config.dragMaxOffset;
+    },
+    dragFocusRightAction: function () {
+      return null !== this.dragOffset && this.dragOffset <= -1 * config.dragMaxOffset;
+    } },
+
+  watch: {
+    state: {
+      handler: function (val) {
+        this.saveOptions();
+      } },
+
+    timers: {
+      handler: function (val) {
+      } } },
+
+
+  methods: {
+    addTimer: function () {
+      if (!this.newTimerLabel) {
+        return;
+      }
+
+      this.timers.push(createTimer(new Date().getTime(), this.newTimerLabel));
+
+      this.newTimerLabel = '';
+    },
+    editTimer: function (index) {
+      this.timerLabelRefs[index].focus();
+    },
+    removeTimer: function (index) {
+      if (this.playingTimerIndex === index) {
+        this.pause();
+      } else if (this.playingTimerIndex > index) {
+        this.play(this.playingTimerIndex - 1);
+      }
+
+      this.timers = this.timers.slice(0, index).concat(this.timers.slice(index + 1));
+    },
+    changeTimerState: function (newState) {
+      var oldState = this.state;
+
+      // If we were playing, save elapsed time to playing timer
+
+      if ('play' === oldState && null !== this.playingTimerIndex) {
+        this.playingTimer.times.push(this.elapsedStateTime);
+        console.log(this.elapsedStateTime);
+      }
+
+      this.state = newState;
+      this.stateStartTime = this.currentTime;
+    },
+    pause: function () {
+      this.changeTimerState('pause');
+
+      this.playingTimerIndex = null;
+
+      releaseWakeState();
+    },
+    play: function (timerIndex) {
+      this.changeTimerState('play');
+
+      this.playingTimerIndex = timerIndex;
+
+      lockWakeState();
+    },
+    togglePlay: function (timerIndex) {
+      if (this.playingTimerIndex === timerIndex) {
+        this.pause();
+      } else {
+        this.play(timerIndex);
+      }
+    },
+    reset: function () {
+      this.pause();
+
+      this.timers.forEach(timer => {
+        timer.reset();
+      });
+
+      this.saveOptions();
+    },
+    renderTime(elapsedMs, includeCs = true) {
+      var ms = elapsedMs % 1000;
+      var cs = parseInt(ms / 10);
+      var seconds = parseInt(elapsedMs / 1000) % 60;
+      var minutes = parseInt(elapsedMs / 1000 / 60) % 60;
+      var hours = parseInt(elapsedMs / (60 * 60 * 1000));
+
+      return (hours > 0 ? String(hours).padStart(1, '0') + ':' : '') + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0') + (includeCs ? ':' + String(cs).padStart(2, '0') : '');
+    },
+    startDragTimer: function (e, timer, index) {
+      var touch = e.touches[0];
+
+      this.draggingTimerIndex = index;
+      this.dragOrigin = {
+        x: touch.clientX,
+        y: touch.clientY };
+
+      this.dragDelta = {
+        x: 0,
+        y: 0,
+        maxX: 0,
+        maxY: 0 };
+
+
+      window.addEventListener('touchmove', this.moveDragTimer);
+      window.addEventListener('touchend', this.endDragTimer);
+    },
+    moveDragTimer: function (e) {
+      if (null == this.draggingTimer) {
+        return;
+      }
+
+      var touch = e.touches[0];
+
+      this.dragDelta.x = touch.clientX - this.dragOrigin.x;
+      this.dragDelta.y = touch.clientY - this.dragOrigin.y;
+      this.dragDelta.maxX = Math.max(Math.abs(this.dragDelta.x), this.dragDelta.maxX);
+      this.dragDelta.maxY = Math.max(Math.abs(this.dragDelta.y), this.dragDelta.maxY);
+    },
+    endDragTimer: function (e) {
+      // Check if event was already captured
+      if (this.draggingTimer === null) {
+        return;
+      }
+
+      // Determine action to take
+
+      if (this.dragOffset >= config.dragMaxOffset) {
+        // If dragged to right, edit name
+
+        this.editTimer(this.draggingTimerIndex);
+      } else if (this.dragOffset <= -1 * config.dragMaxOffset) {
+        // Else if dragged to left, remove
+
+        this.removeTimer(this.draggingTimerIndex);
+      } else if (Math.sqrt(this.dragDelta.maxX ** 2 + this.dragDelta.maxY ** 2) < config.dragClickMaxThreshold) {
+        // Else if close to point of contact
+
+        this.togglePlay(this.draggingTimerIndex);
+      }
+
+      // Cleanup
+
+      this.draggingTimerIndex = null;
+      window.removeEventListener('touchmove', this.moveDragTimer);
+      window.removeEventListener('touchend', this.endDragTimer);
+    },
+    startTick() {
+      this.tickTimer = setInterval(this.updateTime, 50);
+      this.autosaveTimer = setInterval(this.autosave, 5000);
+    },
+    stopTick() {
+      clearInterval(this.tickTimer);
+      clearInterval(this.autosaveTimer);
+    },
+    updateTime() {
+      this.currentTime = Date.now();
+      this.numTicks++;
+    },
+    autosave() {
+      this.saveOptions();
+    },
+    setTimerLabelRef(el, index) {
+      if (el) {
+        if (!this.timerLabelRefs) {
+          this.timerLabelRefs = [];
+        }
+
+        this.timerLabelRefs.push(el);
+      }
+    },
+    saveOptions: function () {
+      localStorage.setItem('setting:timers', JSON.stringify(this.timers));
+    },
+    loadOptions: function () {
+      var timers = localStorage.getItem('setting:timers');
+
+      if (null !== timers) {
+        this.timers = JSON.parse(timers).map(function (timerObj) {
+          return createTimer(timerObj.id, timerObj.label, timerObj.times);
+        });
+      }
+    },
+    setCache: function (key, value) {
+      var storageKey = 'cache:' + key;
+
+      localStorage.setItem(storageKey, Date.now() / 1000 + ':' + JSON.stringify(value));
+    },
+    getCache: function (key) {
+      var storageKey = 'cache:' + key;
+      var stored = localStorage.getItem(storageKey);
+
+      // Unwrap result and maybe return
+
+      if (null !== stored) {
+        var timeNow = Date.now() / 1000;
+        var parts = stored.split(/:(.*)/s);
+        var cacheTime = parts[0];
+        var cacheObj = parts[1];
+
+        if (timeNow - cacheTime < config.cacheTTL) {
+          try {
+            return JSON.parse(cacheObj);
+          } catch (e) {
+            return null;
+          }
+        }
+      }
+
+      return null;
+    },
+    clearCache: function () {
+      var storageKeysToDelete = [];
+
+      // Find all cache namespaced keys
+
+      for (let i = 0; i < localStorage.length; i++) {
+        var storageKey = localStorage.key(i);
+        var parts = storageKey.split(/:(.*)/s);
+        var namespace = parts[0];
+        var logicalKey = parts[1];
+
+        if (namespace === 'cache') {
+          storageKeysToDelete.push(storageKey);
+        }
+      }
+
+      // Iterate over detected expired/non-existent keys and remove them
+
+      storageKeysToDelete.forEach(key => {
+        localStorage.removeItem(key);
+      });
+    },
+    onVisibilityChange: function () {
+      if ('visible' === document.visibilityState) {
+        this.startTick();
+      } else {
+        this.stopTick();
+      }
+    } },
+
+  beforeUpdate() {
+    this.timerLabelRefs = [];
+  },
+  updated() {
+  },
+  mounted: function () {
+    this.timerLabelRefs = [];
+    this.loadOptions();
+    this.startTick();
+    document.addEventListener('visibilitychange', this.onVisibilityChange, false);
+  } });
+
+
+app.mount('#app');
+//# sourceURL=pen.js
+  </script>
+
+  
+
+
+
+</body></html>

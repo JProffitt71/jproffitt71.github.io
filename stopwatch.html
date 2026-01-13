@@ -291,24 +291,24 @@ font-family: monospace;
 </div> 
   
     <script id="rendered-js" type="module">
-import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
 
 const canWakeLock = () => 'wakeLock' in navigator;
 let wakelock;
 async function lockWakeState() {
-  if (!canWakeLock()) return;
+  if(!canWakeLock()) return;
   try {
     wakelock = await navigator.wakeLock.request();
     wakelock.addEventListener('release', () => {
       console.log('Screen Wake State Locked:', !wakelock.released);
     });
     console.log('Screen Wake State Locked:', !wakelock.released);
-  } catch (e) {
+  } catch(e) {
     console.error('Failed to lock wake state with reason:', e.message);
   }
 }
 function releaseWakeState() {
-  if (wakelock) wakelock.release();
+  if(wakelock) wakelock.release();
   wakelock = null;
 }
 
@@ -344,8 +344,8 @@ function createTimer(id, label, times = []) {
     },
     set maxTime(val) {
       return;
-    } };
-
+    }
+  }
 }
 
 var config = {
@@ -353,8 +353,8 @@ var config = {
   dragMaxOffset: 40,
   dragClickMaxThreshold: 10,
   chartStep: 15000,
-  chartMinSteps: 4 };
-
+  chartMinSteps: 4
+}
 
 const app = createApp({
   data: function () {
@@ -370,109 +370,113 @@ const app = createApp({
       dragDelta: null,
       autosaveTimer: null,
       tickTimer: null,
-      numTicks: 0 };
-
+      numTicks: 0
+    }
   },
   computed: {
     paused: function () {
       return 'pause' === this.state;
     },
-    playing: function () {
+    playing: function() {
       return 'play' === this.state;
     },
-    totalTime: function () {
+    totalTime: function() {
       return this.timers.reduce((time, timer) => time + timer.totalTime, 0);
     },
-    elapsedStateTime: function () {
+    elapsedStateTime: function() {
       return this.currentTime - this.stateStartTime;
     },
-    timeDistroChart: function () {
+    timeDistroChart: function() {
       const self = this;
       const maxTime = this.timers.reduce((max, timer) => Math.max(max, timer.maxTime), 0);
       const chartStep = config.chartStep;
       const chartMinSteps = config.chartMinSteps;
-      const chartSteps = Math.max(chartMinSteps, Math.ceil(maxTime / chartStep));
-      const chartLabels = Array(chartSteps).keys().toArray().map(i => {
-        return self.renderTime((i + 1) * chartStep, false);
+      const chartSteps = Math.max(chartMinSteps, Math.round(maxTime / chartStep)) + 1;
+      const chartLabels = Array(chartSteps).keys().toArray().map((i) => {
+        if (0 === i) {
+          return '(Brief)';
+          return '< ' + self.renderTime(chartStep, false);
+        }
+        return self.renderTime(i * chartStep, false);
       });
-
+      
       return {
         labels: chartLabels,
-        series: [].concat(this.timers).sort((a, b) => b.totalTime - a.totalTime).map(timer => {
+        series: [].concat(this.timers).sort((a, b) => b.totalTime - a.totalTime).map((timer) => {
           var timeCounts = Array.from(Array(chartSteps)).fill(0);
 
           return {
             label: timer.label,
             data: timer.times.reduce((counts, time) => {
-              counts[Math.floor(time / chartStep)]++;
+              counts[Math.round(time / chartStep)]++;
               return counts;
-            }, timeCounts) };
-
-        }) };
-
+            }, timeCounts)
+          }
+        })
+      };
     },
-    playingTimer: function () {
+    playingTimer: function() {
       if (null == this.playingTimerIndex) {
         return null;
       }
 
       return this.timers[this.playingTimerIndex];
     },
-    draggingTimer: function () {
+    draggingTimer: function() {
       if (null == this.draggingTimerIndex) {
         return null;
       }
 
       return this.timers[this.draggingTimerIndex];
     },
-    dragOffset: function () {
+    dragOffset: function() {
       if (null == this.dragDelta) {
         return null;
       }
 
-      return Math.abs(this.dragDelta.x) > config.dragActionMinThreshold ? Math.sign(this.dragDelta.x) * Math.min((Math.abs(this.dragDelta.x) - config.dragActionMinThreshold) ** 0.75, config.dragMaxOffset) : 0;
+      return Math.abs(this.dragDelta.x) > config.dragActionMinThreshold ? Math.sign(this.dragDelta.x) * Math.min((Math.abs(this.dragDelta.x) - config.dragActionMinThreshold) ** 0.75, config.dragMaxOffset): 0;
     },
-    dragFocusLeftAction: function () {
+    dragFocusLeftAction: function() {
       return null !== this.dragOffset && this.dragOffset >= config.dragMaxOffset;
     },
-    dragFocusRightAction: function () {
+    dragFocusRightAction: function() {
       return null !== this.dragOffset && this.dragOffset <= -1 * config.dragMaxOffset;
-    } },
-
+    }
+  },
   watch: {
     state: {
-      handler: function (val) {
-        this.saveOptions();
-      } },
-
+      handler: function(val) {
+        this.saveOptions()
+      }
+    },
     timers: {
-      handler: function (val) {
-      } } },
-
-
+      handler: function(val) {
+      }
+    }
+  },
   methods: {
-    addTimer: function () {
+    addTimer: function() {
       if (!this.newTimerLabel) {
         return;
       }
 
-      this.timers.push(createTimer(new Date().getTime(), this.newTimerLabel));
+      this.timers.push(createTimer((new Date()).getTime(), this.newTimerLabel));
 
       this.newTimerLabel = '';
     },
-    editTimer: function (index) {
+    editTimer: function(index) {
       this.timerLabelRefs[index].focus();
     },
-    removeTimer: function (index) {
+    removeTimer: function(index) {
       if (this.playingTimerIndex === index) {
-        this.pause();
+        this.pause();  
       } else if (this.playingTimerIndex > index) {
         this.play(this.playingTimerIndex - 1);
       }
 
-      this.timers = this.timers.slice(0, index).concat(this.timers.slice(index + 1));
+      this.timers = this.timers.slice(0, index).concat(this.timers.slice(index + 1))
     },
-    changeTimerState: function (newState) {
+    changeTimerState: function(newState) {
       var oldState = this.state;
 
       // If we were playing, save elapsed time to playing timer
@@ -485,33 +489,33 @@ const app = createApp({
       this.state = newState;
       this.stateStartTime = this.currentTime;
     },
-    pause: function () {
+    pause: function() {
       this.changeTimerState('pause');
 
       this.playingTimerIndex = null;
 
       releaseWakeState();
     },
-    play: function (timerIndex) {
+    play: function(timerIndex) {
       this.changeTimerState('play');
 
       this.playingTimerIndex = timerIndex;
 
       lockWakeState();
     },
-    togglePlay: function (timerIndex) {
+    togglePlay: function(timerIndex) {
       if (this.playingTimerIndex === timerIndex) {
         this.pause();
       } else {
         this.play(timerIndex);
       }
     },
-    reset: function () {
+    reset: function() {
       this.pause();
 
-      this.timers.forEach(timer => {
+      this.timers.forEach((timer) => {
         timer.reset();
-      });
+      })
 
       this.saveOptions();
     },
@@ -524,25 +528,25 @@ const app = createApp({
 
       return (hours > 0 ? String(hours).padStart(1, '0') + ':' : '') + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0') + (includeCs ? ':' + String(cs).padStart(2, '0') : '');
     },
-    startDragTimer: function (e, timer, index) {
+    startDragTimer: function(e, timer, index) {
       var touch = e.touches[0];
 
       this.draggingTimerIndex = index;
       this.dragOrigin = {
         x: touch.clientX,
-        y: touch.clientY };
-
+        y: touch.clientY
+      }
       this.dragDelta = {
         x: 0,
         y: 0,
         maxX: 0,
-        maxY: 0 };
-
+        maxY: 0
+      }
 
       window.addEventListener('touchmove', this.moveDragTimer);
       window.addEventListener('touchend', this.endDragTimer);
     },
-    moveDragTimer: function (e) {
+    moveDragTimer: function(e) {
       if (null == this.draggingTimer) {
         return;
       }
@@ -554,7 +558,7 @@ const app = createApp({
       this.dragDelta.maxX = Math.max(Math.abs(this.dragDelta.x), this.dragDelta.maxX);
       this.dragDelta.maxY = Math.max(Math.abs(this.dragDelta.y), this.dragDelta.maxY);
     },
-    endDragTimer: function (e) {
+    endDragTimer: function(e) {
       // Check if event was already captured
       if (this.draggingTimer === null) {
         return;
@@ -591,7 +595,7 @@ const app = createApp({
       clearInterval(this.autosaveTimer);
     },
     updateTime() {
-      this.currentTime = Date.now();
+      this.currentTime = Date.now()
       this.numTicks++;
     },
     autosave() {
@@ -603,91 +607,91 @@ const app = createApp({
           this.timerLabelRefs = [];
         }
 
-        this.timerLabelRefs.push(el);
+        this.timerLabelRefs.push(el)
       }
     },
-    saveOptions: function () {
+    saveOptions: function() {
       localStorage.setItem('setting:timers', JSON.stringify(this.timers));
     },
-    loadOptions: function () {
-      var timers = localStorage.getItem('setting:timers');
+    loadOptions: function() {
+      var timers = localStorage.getItem('setting:timers')
 
       if (null !== timers) {
-        this.timers = JSON.parse(timers).map(function (timerObj) {
+        this.timers = JSON.parse(timers).map(function(timerObj) {
           return createTimer(timerObj.id, timerObj.label, timerObj.times);
         });
       }
     },
-    setCache: function (key, value) {
-      var storageKey = 'cache:' + key;
+    setCache: function(key, value) {
+      var storageKey = 'cache:' + key
 
-      localStorage.setItem(storageKey, Date.now() / 1000 + ':' + JSON.stringify(value));
+      localStorage.setItem(storageKey, (Date.now() / 1000) + ':' + JSON.stringify(value))
     },
-    getCache: function (key) {
-      var storageKey = 'cache:' + key;
-      var stored = localStorage.getItem(storageKey);
+    getCache: function(key) {
+      var storageKey = 'cache:' + key
+      var stored = localStorage.getItem(storageKey)
 
       // Unwrap result and maybe return
 
       if (null !== stored) {
         var timeNow = Date.now() / 1000;
         var parts = stored.split(/:(.*)/s);
-        var cacheTime = parts[0];
-        var cacheObj = parts[1];
+        var cacheTime = parts[0]
+        var cacheObj = parts[1]
 
-        if (timeNow - cacheTime < config.cacheTTL) {
+        if ((timeNow - cacheTime) < config.cacheTTL) {
           try {
-            return JSON.parse(cacheObj);
+            return JSON.parse(cacheObj)
           } catch (e) {
-            return null;
+            return null
           }
         }
       }
 
       return null;
     },
-    clearCache: function () {
+    clearCache: function() {
       var storageKeysToDelete = [];
 
       // Find all cache namespaced keys
 
       for (let i = 0; i < localStorage.length; i++) {
-        var storageKey = localStorage.key(i);
-        var parts = storageKey.split(/:(.*)/s);
-        var namespace = parts[0];
-        var logicalKey = parts[1];
+        var storageKey = localStorage.key(i)
+        var parts = storageKey.split(/:(.*)/s)
+        var namespace = parts[0]
+        var logicalKey = parts[1]
 
         if (namespace === 'cache') {
-          storageKeysToDelete.push(storageKey);
+          storageKeysToDelete.push(storageKey)
         }
       }
 
       // Iterate over detected expired/non-existent keys and remove them
 
-      storageKeysToDelete.forEach(key => {
-        localStorage.removeItem(key);
-      });
+      storageKeysToDelete.forEach((key) => {
+        localStorage.removeItem(key)
+      })
     },
-    onVisibilityChange: function () {
+    onVisibilityChange: function() {
       if ('visible' === document.visibilityState) {
         this.startTick();
       } else {
         this.stopTick();
       }
-    } },
-
+    }
+  },
   beforeUpdate() {
-    this.timerLabelRefs = [];
+    this.timerLabelRefs = []
   },
   updated() {
   },
-  mounted: function () {
+  mounted: function() {
     this.timerLabelRefs = [];
     this.loadOptions();
     this.startTick();
     document.addEventListener('visibilitychange', this.onVisibilityChange, false);
-  } });
-
+  }
+});
 
 app.mount('#app');
 //# sourceURL=pen.js

@@ -223,50 +223,72 @@ font-family: monospace;
 </head>
 
 <body translate="no">
-  <div id="app" class="container-fluid" data-v-app=""><h1>Split Stopwatch</h1><ul class="split-timers" style="--drag-offset: 0;"><li class="split-timer split-timer--total"><div class="split-timer__card">Total <span class="split-timer__time">00:14:64</span></div></li><li class="split-timer"><div class="split-timer__card"><input type="text" class="split-timer__label"><span class="split-timer__stats"><span class="split-timer__stats-row"><span class="split-timer__plays">6</span> / <span class="split-timer__time">00:08:02</span></span><span class="split-timer__stats-row"><span class="split-timer__avg">Avg: 00:01:33</span> / <span class="split-timer__max">Max: 00:02:90</span></span></span><div class="split-timer__actions"><i class="fas split-timer__play fa-play"></i><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></div><div class="split-timer__drag-actions"><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></li><li class="split-timer"><div class="split-timer__card"><input type="text" class="split-timer__label"><span class="split-timer__stats"><span class="split-timer__stats-row"><span class="split-timer__plays">1</span> / <span class="split-timer__time">00:06:62</span></span><span class="split-timer__stats-row"><span class="split-timer__avg">Avg: 00:06:62</span> / <span class="split-timer__max">Max: 00:06:62</span></span></span><div class="split-timer__actions"><i class="fas split-timer__play fa-play"></i><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></div><div class="split-timer__drag-actions"><i class="fas fa-edit split-timer__edit"></i><i class="fas fa-times split-timer__remove"></i></div></li><li class="split-timer split-timer--add"><div class="split-timer__card"><input type="text" class="split-timer__label" placeholder="New Split"></div></li></ul><p class="small text-muted mobile-instructions">Tap to play/stop, swipe right/left to edit/delete</p><button class="btn btn-danger w-100">Reset</button><!-- ANALYTICS --><details open="" class="mt-3"><summary>Breakdown</summary><div class="table-responsive"><table class="table time-distribution-table mt-2 mx-auto"><tbody><tr><th>Timer</th><th>00:15</th><th>00:30</th><th>00:45</th><th>01:00</th></tr><tr><th>test2</th><td class="">6</td><td class="no-points">0</td><td class="no-points">0</td><td class="no-points">0</td></tr><tr><th>test</th><td class="">1</td><td class="no-points">0</td><td class="no-points">0</td><td class="no-points">0</td></tr></tbody></table></div></details><!-- DEBUG --><details class="mt-3 text-muted"><summary>Debug</summary><pre class="mt-2 d-noe">{
-  "state": "init",
-  "stateStartTime": 1768344301825,
-  "currentTime": 1768344310760,
-  "timers": [
-    {
-      "id": 1766268758822,
-      "label": "test2",
-      "labelRef": null,
-      "times": [
-        1304,
-        802,
-        2909,
-        492,
-        372,
-        2146
-      ],
-      "totalTime": 8025,
-      "totalPlays": 6,
-      "averageTime": 1337.5,
-      "maxTime": 2909
-    },
-    {
-      "id": 1768344192549,
-      "label": "test",
-      "labelRef": null,
-      "times": [
-        6620
-      ],
-      "totalTime": 6620,
-      "totalPlays": 1,
-      "averageTime": 6620,
-      "maxTime": 6620
-    }
-  ],
-  "newTimerLabel": "",
-  "playingTimerIndex": null,
-  "draggingTimerIndex": null,
-  "dragOrigin": null,
-  "dragDelta": null,
-  "autosaveTimer": 4,
-  "tickTimer": 3,
-  "numTicks": 144
-}</pre></details></div>
+  <div id="app" class="container-fluid">
+  <h1>Split Stopwatch</h1>
+
+  <ul class="split-timers" :class="{'split-timers--playing': this.playing}" :style="{'--drag-offset': this.dragOffset ? this.dragOffset : 0}">
+    <li class="split-timer split-timer--total"><div class="split-timer__card">Total <span class="split-timer__time">{{ renderTime(totalTime + this.playing * elapsedStateTime) }}</span></div></li>
+    <li 
+        class="split-timer" 
+        :class="{'split-timer--dragging': draggingTimer === timer, 'split-timer--playing': playingTimer === timer}"
+        v-for="(timer, index) in timers" 
+        :key="timer.id"
+        @touchstart="startDragTimer($event, timer, index)">
+      <div class="split-timer__card">
+        <input type="text" class="split-timer__label" v-model="timer.label" :ref="(el) => setTimerLabelRef(el, index)" @keyup.enter="$el.blur()"> 
+        <span class="split-timer__stats">
+          <span class="split-timer__stats-row">
+            <span class="split-timer__plays">{{ timer.totalPlays + (timer === playingTimer) }}</span> /
+            <span class="split-timer__time">{{ renderTime(timer.totalTime + (timer === playingTimer) * elapsedStateTime) }}</span>
+          </span>
+          <span class="split-timer__stats-row">
+            <span class="split-timer__avg">Avg: {{ renderTime(timer.averageTime) }}</span> /
+
+            <span class="split-timer__max">Max: {{ renderTime(timer.maxTime) }}</span>
+          </span>
+        </span>
+        <div class="split-timer__actions">
+          <i class="fas split-timer__play" @click="togglePlay(index)" :class="{'fa-play': playingTimerIndex != index, 'fa-pause': playingTimerIndex == index}"></i> 
+          <i class="fas fa-edit split-timer__edit" @click="editTimer(index)"></i> 
+          <i class="fas fa-times split-timer__remove" @click="removeTimer(index)"></i>
+        </div>
+      </div>
+      <div class="split-timer__drag-actions">
+        <i class="fas fa-edit split-timer__edit" :class="{'focus': this.dragFocusLeftAction}"></i> 
+        <i class="fas fa-times split-timer__remove" :class="{'focus': this.dragFocusRightAction}"></i>
+      </div>
+    </li>
+    <li class="split-timer split-timer--add"><div class="split-timer__card">
+      <input type="text" class="split-timer__label" v-model="newTimerLabel" @keyup.enter="addTimer" @blur="addTimer" placeholder="New Split"></div></li>
+  </ul>
+
+  <p class="small text-muted mobile-instructions">Tap to play/stop, swipe right/left to edit/delete</p>
+
+  <button class="btn btn-danger w-100" @click="reset">Reset</button>
+  <!-- ANALYTICS -->
+  <details open="true" class="mt-3">
+    <summary>Breakdown</summary>
+    <div class="table-responsive">
+      <table class="table time-distribution-table mt-2 mx-auto">
+        <tr>
+          <th>Timer</th>
+          <th v-for="label in timeDistroChart.labels">
+            {{ label }}
+          </th>
+        </tr>
+        <tr v-for="singleSeries in timeDistroChart.series">
+          <th>{{ singleSeries.label }}</th>
+          <td v-for="dataPoint in singleSeries.data" :class="{'no-points': dataPoint === 0}">{{ dataPoint }}</td>
+        </tr>
+      </table>
+    </div>
+  </details>
+  <!-- DEBUG -->
+  <details class="mt-3 text-muted">
+    <summary>Debug</summary>
+    <pre class="mt-2 d-noe">{{ $data }}</pre>
+  </details>
+</div> 
   
     <script id="rendered-js" type="module">
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';

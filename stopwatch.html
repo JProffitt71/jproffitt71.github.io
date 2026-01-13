@@ -190,6 +190,7 @@ font-family: monospace;
 }
 
 .time-distribution-table {
+  table-layout: fixed;
   font-size: 10px;
   
   tr:first-child > th {
@@ -264,7 +265,7 @@ font-family: monospace;
 
   <p class="small text-muted mobile-instructions">Tap to play/stop, swipe right/left to edit/delete</p>
 
-  <button class="btn btn-danger w-100" @click="reset">Reset</button>
+  <button class="btn btn-danger w-100" @click="maybeReset">{{ confirmingReset ? 'Are you sure?' : 'Reset' }}</button>
   <!-- ANALYTICS -->
   <details open="true" class="mt-3">
     <summary>Breakdown</summary>
@@ -370,7 +371,8 @@ const app = createApp({
       dragDelta: null,
       autosaveTimer: null,
       tickTimer: null,
-      numTicks: 0
+      numTicks: 0,
+      confirmingReset: false
     }
   },
   computed: {
@@ -510,11 +512,22 @@ const app = createApp({
         this.play(timerIndex);
       }
     },
+    maybeReset: function() {
+      if (this.confirmingReset) {
+        this.reset();
+        clearTimeout(this.confirmingReset);
+        this.confirmingReset = false;
+      } else {
+        this.confirmingReset = setTimeout(() => {
+          this.confirmingReset = false;
+        }, 5000);
+      }
+    },
     reset: function() {
       this.pause();
 
       this.timers.forEach((timer) => {
-        timer.reset();
+        timer.clear();
       })
 
       this.saveOptions();

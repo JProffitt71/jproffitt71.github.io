@@ -98,7 +98,7 @@
       
         // Craft the protocol-specific url for the messenger link element
       
-        var dmUrl = `mailto:${email}?subject=${subject}&body=${message}`;
+        var dmUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
       
         // Configure messenger link element / help text
       

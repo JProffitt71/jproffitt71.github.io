@@ -96,13 +96,9 @@
         var subject = params.subject || "";
         var message = params.message || "";
       
-        // Craft the protocol-specific url for the messenger link element
-      
-        var dmUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-      
         // Configure messenger link element / help text
       
-        messengerLinkEl.href = `mailto:${email}?subject=${subject}&body=${message}`;
+        messengerLinkEl.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
         messengerLinkEl.innerText = `Open email to ${email}`;
       }
       
